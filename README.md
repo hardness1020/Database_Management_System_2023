@@ -5,6 +5,7 @@
 - [Database Management system - 2023 spring](#database-management-system---2023-spring)
   - [Table of Contents](#table-of-contents)
   - [About ](#about-)
+    - [ER Diagram ](#er-diagram-)
   - [Prerequisites ](#prerequisites-)
   - [Usage ](#usage-)
 
@@ -13,6 +14,9 @@
 ## About <a name = "about"></a>
 
 The Database Management system course by Prof. Ming-Ling Lo in National Taiwan University in 2023 spring.
+
+### ER Diagram <a name = "ER Diagram"></a>
+![ER Diagram](HW1/HW1C.png)
 
 <br>
 
