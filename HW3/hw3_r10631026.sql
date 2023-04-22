@@ -2,6 +2,7 @@
 CREATE DATABASE HealthyDB;
 USE HealthyDB;
 
+
 /* info */
 CREATE TABLE self (
     student_id VARCHAR(10) NOT NULL,
@@ -10,6 +11,9 @@ CREATE TABLE self (
     year VARCHAR(10) NOT NULL,
     PRIMARY KEY (student_id)
 );
+INSERT INTO `self` VALUES ('r10631026', '張名翔', '生機系', '碩二');
+SELECT DATABASE();
+SELECT * FROM self;
 
 
 /* create table */
@@ -128,13 +132,13 @@ CREATE TABLE ArticleCategory (
 
 CREATE TABLE CustomerBuyReport (
     customer_id INT NOT NULL,
-    article_id INT NOT NULL,
+    report_id INT NOT NULL,
     coupon_promoter_id INT,
     coupon_code VARCHAR(40),
     CONSTRAINT fk_buy_customer_id FOREIGN KEY (customer_id) REFERENCES Customer(user_id),
-    CONSTRAINT fk_buy_article_id FOREIGN KEY (article_id) REFERENCES Article(article_id),
+    CONSTRAINT fk_buy_report_id FOREIGN KEY (report_id) REFERENCES Report(report_id),
     CONSTRAINT fk_buy_coupon FOREIGN KEY (coupon_promoter_id, coupon_code) REFERENCES Coupon(promoter_id, code),
-    PRIMARY KEY (customer_id, article_id)
+    PRIMARY KEY (customer_id, report_id)
 );
 
 CREATE TABLE UserLikeArticle (
@@ -153,9 +157,8 @@ CREATE TABLE UserSaveArticle (
     PRIMARY KEY (user_id, article_id)
 );
 
-/* insert */
-INSERT INTO `self` VALUES ('r10631026', '張名翔', '生機系', '碩二');
 
+/* insert */
 INSERT INTO `Health` (health_id, precaution, suggestion) VALUES (1, '避免過度練習', '多吃蔬菜水果');
 INSERT INTO `Health` (health_id, precaution, suggestion) VALUES (2, '避免勞累', '多睡眠');
 INSERT INTO `Health` (health_id, precaution, suggestion) VALUES (3, '不要抽菸', '多運動');
@@ -184,7 +187,7 @@ INSERT INTO `Admin` (user_id, database_account) VALUES (@doe_id, 'secret456');
 INSERT INTO `UserLikeArticle` (user_id, article_id) VALUES (@doe_id, 1);
 INSERT INTO `UserSaveArticle` (user_id, article_id) VALUES (@doe_id, 1);
 INSERT INTO `Customer` (user_id, consumption) VALUES (@doe_id, 5000);
-INSERT INTO `CustomerBuyReport` (customer_id, article_id) VALUES (@doe_id, 1);
+INSERT INTO `CustomerBuyReport` (customer_id, report_id, coupon_promoter_id, coupon_code) VALUES (@doe_id, 1, 1, '123456');
 
 INSERT INTO `User` (username, password) VALUES ('ross', 'happytrees789');
 SET @ross_id = LAST_INSERT_ID();
@@ -207,7 +210,7 @@ INSERT INTO `Normal` (user_id) VALUES (@john_id);
 INSERT INTO `Promoter` (user_id, created_by_admin_id) VALUES (@john_id, @smith_id);
 INSERT INTO `Coupon` (promoter_id, code, discount, expire_date) VALUES (@john_id, '12345678', 0.5, '2025-12-31');
 INSERT INTO `Customer` (user_id, consumption) VALUES (@john_id, 1000);
-INSERT INTO `CustomerBuyReport` (customer_id, article_id) VALUES (@john_id, 2);
+INSERT INTO `CustomerBuyReport` (customer_id, report_id) VALUES (@john_id, 2);
 
 INSERT INTO `User` (username, password) VALUES ('bob', 'pass564rd123');
 SET @bob_id = LAST_INSERT_ID();
@@ -228,12 +231,10 @@ INSERT INTO `Normal` (user_id) VALUES (@jane_id);
 INSERT INTO `Promoter` (user_id, created_by_admin_id) VALUES (@jane_id, @smith_id);
 INSERT INTO `Coupon` (promoter_id, code, discount, expire_date) VALUES (@jane_id, '123456789', 0.5, '2025-12-31');
 INSERT INTO `Customer` (user_id, consumption) VALUES (@jane_id, 1000);
-INSERT INTO `CustomerBuyReport` (customer_id, article_id) VALUES (@jane_id, 2);
-INSERT INTO `CustomerBuyReport` (customer_id, article_id) VALUES (@jane_id, 3);
+INSERT INTO `CustomerBuyReport` (customer_id, report_id, coupon_promoter_id, coupon_code) VALUES (@jane_id, 2, 4, '12345678');
+INSERT INTO `CustomerBuyReport` (customer_id, report_id, coupon_promoter_id, coupon_code) VALUES (@jane_id, 3, 6, '123456789');
 INSERT INTO `UserLikeArticle` (user_id, article_id) VALUES (@jane_id, 2);
 INSERT INTO `UserSaveArticle` (user_id, article_id) VALUES (@jane_id, 2);
-
-
 
 
 /* create two views */
@@ -241,7 +242,7 @@ CREATE VIEW customer_with_high_severity_report AS
 SELECT Customer.user_id, User.username, Report.report_id FROM User, Customer, CustomerBuyReport, Report, Disease
 WHERE  Disease.severity = 'high' AND
        Customer.user_id = CustomerBuyReport.customer_id AND
-       CustomerBuyReport.article_id = Report.report_id AND
+       CustomerBuyReport.report_id = Report.report_id AND
        Report.inherited_disease_id = Disease.disease_id AND
        User.user_id = Customer.user_id;
 
@@ -252,26 +253,109 @@ WHERE  Coupon.expire_date > NOW() AND
        Promoter.user_id = Coupon.promoter_id;
 
 
-/* select from all tables and views */
-SELECT * FROM self;
-SELECT * FROM User;
-SELECT * FROM Admin;
-SELECT * FROM Normal;
-SELECT * FROM Promoter;
-SELECT * FROM Coupon;
-SELECT * FROM Author;
-SELECT * FROM Disease;
-SELECT * FROM Health;
-SELECT * FROM Report;
-SELECT * FROM Category;
-SELECT * FROM Article;
-SELECT * FROM ArticleCategory;
-SELECT * FROM Customer;
-SELECT * FROM CustomerBuyReport;
-SELECT * FROM UserLikeArticle;
-SELECT * FROM UserSaveArticle;
-SELECT * FROM customer_with_high_severity_report;
-SELECT * FROM promoter_with_non_expired_coupon;
+/***** homework 3 commands *****/
+/* basic select */
+SELECT *
+FROM User
+WHERE (username LIKE 'j%' OR username LIKE 'b%') 
+        AND NOT username LIKE '%n';
+
+/* basic projection */
+SELECT username, password
+FROM User
+WHERE (username LIKE 'j%' OR username LIKE 'b%') 
+        AND NOT username LIKE '%n';
+
+/* basic rename */
+SELECT username AS 帳號, password AS 密碼
+FROM User
+WHERE (username LIKE 'j%' OR username LIKE 'b%') 
+        AND NOT username LIKE '%n';
+
+/* union */
+(SELECT user_id FROM Promoter)
+UNION
+(SELECT user_id FROM Customer);
+
+/* equijoin */
+SELECT *
+FROM User JOIN Promoter
+ON User.user_id = Promoter.user_id;
+
+/* natural join */
+SELECT *
+FROM User NATURAL JOIN Promoter;
+
+/* theta join */
+SELECT *
+FROM Report, CustomerBuyReport, Coupon
+WHERE Report.report_id = CustomerBuyReport.report_id AND
+      CustomerBuyReport.coupon_promoter_id = Coupon.promoter_id AND
+      CustomerBuyReport.coupon_code = Coupon.code AND
+      Coupon.promoter_id = Report.author_id;
+
+/* three table join */
+SELECT username, content
+FROM User, Author, Report
+WHERE User.user_id = Author.user_id AND
+      Author.user_id = Report.author_id;
+
+/* aggregate */
+SELECT username, COUNT(*) AS 買過報告數量, MAX(Report.date) AS 最近買報告日期, MIN(Report.date) AS 最早買報告日期
+FROM User, Customer, CustomerBuyReport, Report
+WHERE User.user_id = Customer.user_id AND
+      Customer.user_id = CustomerBuyReport.customer_id AND
+      CustomerBuyReport.report_id = Report.report_id
+GROUP BY username;
+
+/* aggregate 2 */
+SELECT username, COUNT(*) AS 優惠券數量, AVG(discount) AS 平均折扣, SUM(expire_date > NOW()) AS 未過期數量
+FROM User, Promoter, Coupon
+WHERE User.user_id = Promoter.user_id AND
+      Promoter.user_id = Coupon.promoter_id
+GROUP BY username;
+
+/* in */ 
+SELECT *
+FROM Disease
+WHERE severity IN ('high', 'medium');
+
+/* in 2 */
+SELECT *
+From Report
+WHERE inherited_disease_id IN (SELECT disease_id FROM Disease WHERE severity = 'high');
+
+/* correlated nested query */
+SELECT *
+FROM Report
+WHERE report_id IN (SELECT report_id 
+                    FROM CustomerBuyReport, Coupon 
+                    WHERE CustomerBuyReport.coupon_promoter_id = Coupon.promoter_id AND
+                          CustomerBuyReport.coupon_code = Coupon.code AND
+                          Coupon.promoter_id = Report.author_id);
+                        
+/* correlated nested query 2 */
+SELECT *
+FROM Report
+WHERE EXISTS (SELECT * 
+              FROM CustomerBuyReport, Coupon 
+              WHERE CustomerBuyReport.coupon_promoter_id = Coupon.promoter_id AND
+                    CustomerBuyReport.coupon_code = Coupon.code AND
+                    Coupon.promoter_id = Report.author_id);
+
+/* bonus 1 */
+SELECT *
+FROM Customer LEFT OUTER JOIN User
+ON Customer.user_id = User.user_id;
+
+/* bonus 2 */
+SELECT *
+FROM Report
+WHERE NOT EXISTS (SELECT * 
+                  FROM CustomerBuyReport, Coupon 
+                  WHERE CustomerBuyReport.coupon_promoter_id = Coupon.promoter_id AND
+                        CustomerBuyReport.coupon_code = Coupon.code AND
+                        Coupon.promoter_id = Report.author_id);
 
 
 /* drop database */
